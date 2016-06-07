@@ -6352,16 +6352,16 @@ fi
 
 
 LIBTOOL=
-if test -f ../libtool; then
-  coin_config_dir=..
-  LIBTOOL='$(SHELL) $(top_builddir)/../libtool'
-fi
-if test "x$LIBTOOL" = x; then
-  if test -f ../../libtool; then
-    coin_config_dir=../..
-    LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'
-  fi
-fi
+#if test -f ../libtool; then
+#  coin_config_dir=..
+#  LIBTOOL='$(SHELL) $(top_builddir)/../libtool'
+#fi
+#if test "x$LIBTOOL" = x; then
+#  if test -f ../../libtool; then
+#    coin_config_dir=../..
+#    LIBTOOL='$(SHELL) $(top_builddir)/../../libtool'
+#  fi
+#fi
 
 if test "x$LIBTOOL" = x; then
 # AC_MSG_NOTICE([Creating libtool script (calling COIN_PROG_LIBTOOL).])
@@ -15599,6 +15599,158 @@ if test -f "$ltmain"; then
   esac
 
 cfgfile="$ofile"
+
+  cat <<__EOF__ >> "$cfgfile"
+# ### BEGIN LIBTOOL TAG CONFIG: FC
+
+# The linker used to build libraries.
+LD=$lt_LD_FC
+
+# How to create reloadable object files.
+reload_flag=$lt_reload_flag_FC
+reload_cmds=$lt_reload_cmds_FC
+
+# Commands used to build an old-style archive.
+old_archive_cmds=$lt_old_archive_cmds_FC
+
+# A language specific compiler.
+CC=$lt_compiler_FC
+
+# Is the compiler the GNU compiler?
+with_gcc=$GCC_FC
+
+# Compiler flag to turn off builtin functions.
+no_builtin_flag=$lt_lt_prog_compiler_no_builtin_flag_FC
+
+# Additional compiler flags for building library objects.
+pic_flag=$lt_lt_prog_compiler_pic_FC
+
+# How to pass a linker flag through the compiler.
+wl=$lt_lt_prog_compiler_wl_FC
+
+# Compiler flag to prevent dynamic linking.
+link_static_flag=$lt_lt_prog_compiler_static_FC
+
+# Does compiler simultaneously support -c and -o options?
+compiler_c_o=$lt_lt_cv_prog_compiler_c_o_FC
+
+# Whether or not to add -lc for building shared libraries.
+build_libtool_need_lc=$archive_cmds_need_lc_FC
+
+# Whether or not to disallow shared libs when runtime libs are static.
+allow_libtool_libs_with_static_runtimes=$enable_shared_with_static_runtimes_FC
+
+# Compiler flag to allow reflexive dlopens.
+export_dynamic_flag_spec=$lt_export_dynamic_flag_spec_FC
+
+# Compiler flag to generate shared objects directly from archives.
+whole_archive_flag_spec=$lt_whole_archive_flag_spec_FC
+
+# Whether the compiler copes with passing no objects directly.
+compiler_needs_object=$lt_compiler_needs_object_FC
+
+# Create an old-style archive from a shared archive.
+old_archive_from_new_cmds=$lt_old_archive_from_new_cmds_FC
+
+# Create a temporary old-style archive to link instead of a shared archive.
+old_archive_from_expsyms_cmds=$lt_old_archive_from_expsyms_cmds_FC
+
+# Commands used to build a shared archive.
+archive_cmds=$lt_archive_cmds_FC
+archive_expsym_cmds=$lt_archive_expsym_cmds_FC
+
+# Commands used to build a loadable module if different from building
+# a shared archive.
+module_cmds=$lt_module_cmds_FC
+module_expsym_cmds=$lt_module_expsym_cmds_FC
+
+# Whether we are building with GNU ld or not.
+with_gnu_ld=$lt_with_gnu_ld_FC
+
+# Flag that allows shared libraries with undefined symbols to be built.
+allow_undefined_flag=$lt_allow_undefined_flag_FC
+
+# Flag that enforces no undefined symbols.
+no_undefined_flag=$lt_no_undefined_flag_FC
+
+# Flag to hardcode \$libdir into a binary during linking.
+# This must work even if \$libdir does not exist
+hardcode_libdir_flag_spec=$lt_hardcode_libdir_flag_spec_FC
+
+# Whether we need a single "-rpath" flag with a separated argument.
+hardcode_libdir_separator=$lt_hardcode_libdir_separator_FC
+
+# Set to "yes" if using DIR/libNAME\${shared_ext} during linking hardcodes
+# DIR into the resulting binary.
+hardcode_direct=$hardcode_direct_FC
+
+# Set to "yes" if using DIR/libNAME\${shared_ext} during linking hardcodes
+# DIR into the resulting binary and the resulting library dependency is
+# "absolute",i.e impossible to change by setting \${shlibpath_var} if the
+# library is relocated.
+hardcode_direct_absolute=$hardcode_direct_absolute_FC
+
+# Set to "yes" if using the -LDIR flag during linking hardcodes DIR
+# into the resulting binary.
+hardcode_minus_L=$hardcode_minus_L_FC
+
+# Set to "yes" if using SHLIBPATH_VAR=DIR during linking hardcodes DIR
+# into the resulting binary.
+hardcode_shlibpath_var=$hardcode_shlibpath_var_FC
+
+# Set to "yes" if building a shared library automatically hardcodes DIR
+# into the library and all subsequent libraries and executables linked
+# against it.
+hardcode_automatic=$hardcode_automatic_FC
+
+# Set to yes if linker adds runtime paths of dependent libraries
+# to runtime path list.
+inherit_rpath=$inherit_rpath_FC
+
+# Whether libtool must link a program against all its dependency libraries.
+link_all_deplibs=$link_all_deplibs_FC
+
+# Set to "yes" if exported symbols are required.
+always_export_symbols=$always_export_symbols_FC
+
+# The commands to list exported symbols.
+export_symbols_cmds=$lt_export_symbols_cmds_FC
+
+# Symbols that should not be listed in the preloaded symbols.
+exclude_expsyms=$lt_exclude_expsyms_FC
+
+# Symbols that must always be exported.
+include_expsyms=$lt_include_expsyms_FC
+
+# Commands necessary for linking programs (against libraries) with templates.
+prelink_cmds=$lt_prelink_cmds_FC
+
+# Commands necessary for finishing linking programs.
+postlink_cmds=$lt_postlink_cmds_FC
+
+# Specify filename containing input files.
+file_list_spec=$lt_file_list_spec_FC
+
+# How to hardcode a shared library path into an executable.
+hardcode_action=$hardcode_action_FC
+
+# The directories searched by this compiler when creating a shared library.
+compiler_lib_search_dirs=$lt_compiler_lib_search_dirs_FC
+
+# Dependencies to place before and after the objects being linked to
+# create a shared library.
+predep_objects=$lt_predep_objects_FC
+postdep_objects=$lt_postdep_objects_FC
+predeps=$lt_predeps_FC
+postdeps=$lt_postdeps_FC
+
+# The library search path used internally by the compiler when linking
+# a shared library.
+compiler_lib_search_path=$lt_compiler_lib_search_path_FC
+
+# ### END LIBTOOL TAG CONFIG: FC
+
+__EOF__
 
   cat <<__EOF__ >> "$cfgfile"
 # ### BEGIN LIBTOOL TAG CONFIG: $tagname
