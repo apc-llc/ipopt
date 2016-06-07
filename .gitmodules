@@ -1,0 +1,3 @@
+[submodule "ThirdParty/HSL/coinhsl"]
+	path = ThirdParty/HSL/coinhsl
+	url = https://github.com/apc-llc/hsl.git
