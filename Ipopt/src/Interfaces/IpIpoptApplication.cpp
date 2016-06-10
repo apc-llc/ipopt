@@ -40,6 +40,11 @@
 # endif
 #endif
 
+// Read ipopt.opt parameters file, if not explicitly shut down (backward-compatible behavior)
+#ifndef READ_PARAMS_DAT
+# define READ_PARAMS_DAT true
+#endif
+
 #include <fstream>
 
 // Factory to facilitate creating IpoptApplication objects from within a DLL
@@ -58,7 +63,7 @@ namespace Ipopt
   IpoptApplication::IpoptApplication(bool create_console_out /* = true */,
                                      bool create_empty /* = false */)
       :
-      read_params_dat_(true),
+      read_params_dat_(READ_PARAMS_DAT),
       rethrow_nonipoptexception_(false),
       inexact_algorithm_(false),
       replace_bounds_(false)
@@ -113,7 +118,7 @@ namespace Ipopt
                                      SmartPtr<OptionsList> options,
                                      SmartPtr<Journalist> jnlst)
       :
-      read_params_dat_(true),
+      read_params_dat_(READ_PARAMS_DAT),
       rethrow_nonipoptexception_(false),
       jnlst_(jnlst),
       reg_options_(reg_options),
@@ -574,7 +579,10 @@ namespace Ipopt
      if (option_file_name != "" && option_file_name != "ipopt.opt")
         jnlst_->Printf(J_SUMMARY, J_MAIN, "Using option file \"%s\".\n\n", option_file_name.c_str());
 
-     return Initialize(option_file_name);
+     if (read_params_dat_)
+	return Initialize(option_file_name);
+
+     return Solve_Succeeded;
   }
 
   IpoptApplication::~IpoptApplication()
