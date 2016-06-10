@@ -253,12 +253,12 @@ namespace Ipopt
     if (IpData().iter_count() >= max_iterations_) {
       return ConvergenceCheck::MAXITER_EXCEEDED;
     }
-
+#ifndef IPOPT_NO_TIMING
     Number curr_cpu_time = CpuTime();
     if (max_cpu_time_ < 999999. && curr_cpu_time - IpData().cpu_time_start() > max_cpu_time_) {
       return ConvergenceCheck::CPUTIME_EXCEEDED;
     }
-
+#endif
     return ConvergenceCheck::CONTINUE;
   }
 

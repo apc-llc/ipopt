@@ -124,7 +124,12 @@ namespace Ipopt
     if (lsmethod=="cg-penalty") {
       add_data = new CGPenaltyData();
     }
+
+#ifdef IPOPT_NO_TIMING
+    ip_data = new IpoptData(add_data, 0);
+#else
     ip_data = new IpoptData(add_data);
+#endif
 
     // Create the IpoptCalculators.  Check if there are additional
     // calcluated quantities that are needed

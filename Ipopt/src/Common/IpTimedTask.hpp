@@ -52,9 +52,11 @@ namespace Ipopt
       DBG_ASSERT(!start_called_);
       end_called_ = false;
       start_called_ = true;
+#ifndef IPOPT_NO_TIMING
       start_cputime_ = CpuTime();
       start_systime_ = SysTime();
       start_walltime_ = WallclockTime();
+#endif
     }
 
     /** Method that is called after execution of the task. */
@@ -64,9 +66,11 @@ namespace Ipopt
       DBG_ASSERT(start_called_);
       end_called_ = true;
       start_called_ = false;
+#ifndef IPOPT_NO_TIMING
       total_cputime_ += CpuTime() - start_cputime_;
       total_systime_ += SysTime() - start_systime_;
       total_walltime_ += WallclockTime() - start_walltime_;
+#endif
     }
 
     /** Method that is called after execution of the task for which
