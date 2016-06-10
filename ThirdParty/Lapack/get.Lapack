@@ -20,38 +20,33 @@ if test ! $wgetcount = 1; then
 fi
 
 echo " "
-echo "Running script for downloading the source code for LAPACK"
+echo "Running script for preparing the source code for LAPACK"
 echo " "
 
-rm -f lapack-${lapack_ver}.tgz
-
-echo "Downloading the source code from projects.coin-or.org..."
-if ! $wgetcmd http://www.coin-or.org/BuildTools/Lapack/lapack-${lapack_ver}.tgz ;
-then
-  echo
-  echo "Failed, try downloading the source code from www.netlib.org..."
-  if ! $wgetcmd http://www.netlib.org/lapack/lapack-${lapack_ver}.tgz ;
+if [ ! -e lapack.fetch ]; then
+  echo "Downloading the source code from projects.coin-or.org..."
+  if ! ( $wgetcmd http://www.coin-or.org/BuildTools/Lapack/lapack-${lapack_ver}.tgz && touch lapack.fetch ) ;
   then
     echo
-    echo "Failed, try downloading the source code from netlib.sandia.gov..."
-    if ! $wgetcmd http://netlib.sandia.gov/lapack/lapack-${lapack_ver}.tgz
+    echo "Failed, try downloading the source code from www.netlib.org..."
+    if ! ( $wgetcmd http://www.netlib.org/lapack/lapack-${lapack_ver}.tgz  && touch lapack.fetch ) ;
     then
-      exit 1;
+      echo
+      echo "Failed, try downloading the source code from netlib.sandia.gov..."
+      if ! ( $wgetcmd http://netlib.sandia.gov/lapack/lapack-${lapack_ver}.tgz && touch lapack.fetch ) ;
+      then
+        exit 1;
+      fi
     fi
   fi
 fi
 
-echo "Uncompressing the tarball..."
-gunzip -f lapack-${lapack_ver}.tgz
-
 echo "Unpacking the source code..."
-tar xf lapack-${lapack_ver}.tar lapack-${lapack_ver}/SRC lapack-${lapack_ver}/INSTALL/dlamch.f lapack-${lapack_ver}/INSTALL/slamch.f
+tar -xf lapack-${lapack_ver}.tgz lapack-${lapack_ver}/SRC lapack-${lapack_ver}/INSTALL/dlamch.f lapack-${lapack_ver}/INSTALL/slamch.f
 rm -rf LAPACK
 mv lapack-${lapack_ver} LAPACK
 
-echo "Deleting the tar file..."
-rm lapack-${lapack_ver}.tar
+echo " "
+echo "Done preparing the source code for LAPACK."
+echo " "
 
-echo " "
-echo "Done downloading the source code for LAPACK."
-echo " "

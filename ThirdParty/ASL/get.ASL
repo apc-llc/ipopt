@@ -20,29 +20,28 @@ fi
 coinasl=solvers-20130815.tgz
 
 echo " "
-echo "Running script for downloading the source code for the ASL"
+echo "Running script for preparing the source code for the ASL"
 echo " "
 
-rm -f solvers.tgz
-
-echo "Downloading the source code from projects.coin-or.org..."
-if $wgetcmd http://www.coin-or.org/BuildTools/ASL/$coinasl ;
-then
-  mv $coinasl solvers.tgz
-else
-  echo
-  echo "Failed, try downloading the source code from www.ampl.com..."
-  $wgetcmd http://www.ampl.com/netlib/ampl/solvers.tgz
+if [ ! -e asl.fetch ]; then
+  echo "Downloading the source code from projects.coin-or.org..."
+  if $wgetcmd http://www.coin-or.org/BuildTools/ASL/$coinasl && touch asl.fetch ;
+  then
+    mv $coinasl solvers.tgz
+  else
+    echo
+    echo "Failed, try downloading the source code from www.ampl.com..."
+    if ! ( $wgetcmd http://www.ampl.com/netlib/ampl/solvers.tgz && touch asl.fetch ) ;
+    then
+      exit 1;
+    fi
+  fi
 fi
 
 rm -rf solvers
 
 echo "Unpacking the source code..."
-gunzip -f solvers.tgz
-tar xf solvers.tar
-
-#echo "Uncompressing the source files..."
-#gunzip -fr solvers
+tar -xf solvers.tgz
 
 echo "Adding No_dtoa to CFLAGS..."
 cd solvers
@@ -50,10 +49,7 @@ mv makefile.u makefile.u.orig
 sed -e 's/CFLAGS = /CFLAGS = -DNo_dtoa /g' makefile.u.orig > makefile.u 
 cd ..
 
-echo "Deleting the tar file..."
-rm solvers.tar
-
 echo " "
-echo "Done downloading the source code for ASL."
+echo "Done preparing the source code for ASL."
 echo " "
 

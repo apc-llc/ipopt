@@ -22,29 +22,23 @@ if test ! $wgetcount = 1; then
 fi
 
 echo " "
-echo "Running script for downloading the source code for MUMPS"
+echo "Running script for preparing the source code for MUMPS"
 echo " "
 
-rm -f MUMPS*.tgz
-
-echo "Downloading the source code from ..."
-$wgetcmd http://mumps.enseeiht.fr/MUMPS_${mumps_ver}.tar.gz
-
-echo "Uncompressing the tarball..."
-gunzip -f MUMPS_${mumps_ver}.tar.gz
+if [ ! -e mumps.fetch ]; then
+  echo "Downloading the source code from ..."
+  if ! ( $wgetcmd http://mumps.enseeiht.fr/MUMPS_${mumps_ver}.tar.gz && touch mumps.fetch ) ;
+  then
+    exit 1;
+  fi
+fi
 
 echo "Unpacking the source code..."
-tar xf MUMPS_${mumps_ver}.tar
-
-echo "Deleting the tar file..."
-rm MUMPS_${mumps_ver}.tar
+tar -xf MUMPS_${mumps_ver}.tar.gz
 
 rm -rf MUMPS
 mv MUMPS_${mumps_ver} MUMPS
 
-echo " "
-echo "Done downloading the source code for MUMPS."
-echo " "
 echo "Apply a patch to work around a bug in MUMPS."
 echo " "
 
@@ -52,3 +46,7 @@ patch -p0 < mumps.patch
 
 echo " "
 echo "Verify that there are no error message in the output above."
+echo " "
+echo "Done preparing the source code for MUMPS."
+echo " "
+
