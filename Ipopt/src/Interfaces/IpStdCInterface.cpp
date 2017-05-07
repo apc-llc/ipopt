@@ -11,14 +11,19 @@
 #include "IpOptionsList.hpp"
 #include "IpIpoptApplication.hpp"
 
+#include <vector>
+
+using namespace Ipopt;
+using namespace std;
+
 struct IpoptProblemInfo
 {
   Index n;
-  Number* x_L;
-  Number* x_U;
+  vector<Number> x_L;
+  vector<Number> x_U;
   Index m;
-  Number* g_L;
-  Number* g_U;
+  vector<Number> g_L;
+  vector<Number> g_U;
   Index nele_jac;
   Index nele_hess;
   Index index_style;
@@ -28,10 +33,70 @@ struct IpoptProblemInfo
   Eval_Jac_G_CB eval_jac_g;
   Eval_H_CB eval_h;
   Intermediate_CB intermediate_cb;
-  Ipopt::SmartPtr<Ipopt::IpoptApplication> app;
+  SmartPtr<IpoptApplication> app;
   Number obj_scaling;
-  Number* x_scaling;
-  Number* g_scaling;
+  vector<Number> x_scaling;
+  vector<Number> g_scaling;
+
+  SmartPtr<TNLP> tnlp;
+  vector<Number> start_x;
+  vector<Number> start_lam;
+  vector<Number> start_z_L;
+  vector<Number> start_z_U;
+
+  IpoptProblemInfo(
+    Index n_,
+    Number* x_L_,
+    Number* x_U_,
+    Index m_,
+    Number* g_L_,
+    Number* g_U_,
+    Index nele_jac_,
+    Index nele_hess_,
+    Index index_style_,
+    Eval_F_CB eval_f_,
+    Eval_G_CB eval_g_,
+    Eval_Grad_F_CB eval_grad_f_,
+    Eval_Jac_G_CB eval_jac_g_,
+    Eval_H_CB eval_h_) :
+
+	n(n_),
+	x_L(n),
+	x_U(n),
+	m(m_),
+	g_L(m),
+	g_U(m),
+	nele_jac(nele_jac_),
+	nele_hess(nele_hess_),
+	index_style(index_style_),
+	eval_f(eval_f_),
+	eval_g(eval_g_),
+	eval_grad_f(eval_grad_f_),
+	eval_jac_g(eval_jac_g_),
+	eval_h(eval_h_),
+	intermediate_cb(NULL),
+	app(new IpoptApplication()),
+	obj_scaling(1),
+	x_scaling(n),
+	g_scaling(m)
+
+  {
+    for (Index i=0; i<n; i++) {
+      x_L[i] = x_L_[i];
+    }
+    for (Index i=0; i<n; i++) {
+      x_U[i] = x_U_[i];
+    }
+
+    if (m>0) {
+      for (Index i=0; i<m; i++) {
+        g_L[i] = g_L_[i];
+      }
+      for (Index i=0; i<m; i++) {
+        g_U[i] = g_U_[i];
+      }
+    }
+  }
 };
 
 IpoptProblem CreateIpoptProblem(
@@ -57,49 +122,21 @@ IpoptProblem CreateIpoptProblem(
     return NULL;
   }
 
-  IpoptProblem retval = new IpoptProblemInfo;
-
-  retval->n = n;
-  retval->x_L = new Number[n];
-  for (Index i=0; i<n; i++) {
-    retval->x_L[i] = x_L[i];
-  }
-  retval->x_U = new Number[n];
-  for (Index i=0; i<n; i++) {
-    retval->x_U[i] = x_U[i];
-  }
-
-  retval->m = m;
-  if (m>0) {
-    retval->g_L = new Number[m];
-    for (Index i=0; i<m; i++) {
-      retval->g_L[i] = g_L[i];
-    }
-    retval->g_U = new Number[m];
-    for (Index i=0; i<m; i++) {
-      retval->g_U[i] = g_U[i];
-    }
-  }
-  else {
-    retval->g_L = NULL;
-    retval->g_U = NULL;
-  }
-
-  retval->nele_jac = nele_jac;
-  retval->nele_hess = nele_hess;
-  retval->index_style = index_style;
-  retval->eval_f = eval_f;
-  retval->eval_g = eval_g;
-  retval->eval_grad_f = eval_grad_f;
-  retval->eval_jac_g = eval_jac_g;
-  retval->eval_h = eval_h;
-  retval->intermediate_cb = NULL;
-
-  retval->app = new Ipopt::IpoptApplication();
-
-  retval->obj_scaling = 1;
-  retval->x_scaling = NULL;
-  retval->g_scaling = NULL;
+  IpoptProblem retval = new IpoptProblemInfo(
+    n,
+    x_L,
+    x_U,
+    m,
+    g_L,
+    g_U,
+    nele_jac,
+    nele_hess,
+    index_style,
+    eval_f,
+    eval_g,
+    eval_grad_f,
+    eval_jac_g,
+    eval_h);
 
   retval->app->RethrowNonIpoptException(false);
 
@@ -108,49 +145,37 @@ IpoptProblem CreateIpoptProblem(
 
 void FreeIpoptProblem(IpoptProblem ipopt_problem)
 {
-  delete [] ipopt_problem->x_L;
-  delete [] ipopt_problem->x_U;
-  if (ipopt_problem->m>0) {
-    delete [] ipopt_problem->g_L;
-    delete [] ipopt_problem->g_U;
-  }
-
   ipopt_problem->app = NULL;
 
-  delete [] ipopt_problem->x_scaling;
-  delete [] ipopt_problem->g_scaling;
-
   delete ipopt_problem;
-
 }
-
 
 Bool AddIpoptStrOption(IpoptProblem ipopt_problem, char* keyword, char* val)
 {
-  std::string tag(keyword);
-  std::string value(val);
+  string tag(keyword);
+  string value(val);
   return (Bool) ipopt_problem->app->Options()->SetStringValue(tag, value);
 }
 
 Bool AddIpoptNumOption(IpoptProblem ipopt_problem, char* keyword, Number val)
 {
-  std::string tag(keyword);
-  Ipopt::Number value=val;
+  string tag(keyword);
+  Number value=val;
   return (Bool) ipopt_problem->app->Options()->SetNumericValue(tag, value);
 }
 
 Bool AddIpoptIntOption(IpoptProblem ipopt_problem, char* keyword, Int val)
 {
-  std::string tag(keyword);
-  Ipopt::Index value=val;
+  string tag(keyword);
+  Index value=val;
   return (Bool) ipopt_problem->app->Options()->SetIntegerValue(tag, value);
 }
 
 Bool OpenIpoptOutputFile(IpoptProblem ipopt_problem, char* file_name,
                          Int print_level)
 {
-  std::string name(file_name);
-  Ipopt::EJournalLevel level = Ipopt::EJournalLevel(print_level);
+  string name(file_name);
+  EJournalLevel level = EJournalLevel(print_level);
   return (Bool) ipopt_problem->app->OpenOutputFile(name, level);
 }
 
@@ -161,28 +186,14 @@ Bool SetIpoptProblemScaling(IpoptProblem ipopt_problem,
 {
   ipopt_problem->obj_scaling = obj_scaling;
   if (x_scaling) {
-    if (!ipopt_problem->x_scaling) {
-      ipopt_problem->x_scaling = new Number[ipopt_problem->n];
-    }
-    for (::Index i=0; i<ipopt_problem->n; i++) {
+    for (Index i=0; i<ipopt_problem->n; i++) {
       ipopt_problem->x_scaling[i] = x_scaling[i];
     }
   }
-  else {
-    delete [] ipopt_problem->x_scaling;
-    ipopt_problem->x_scaling = NULL;
-  }
   if (g_scaling) {
-    if (!ipopt_problem->g_scaling) {
-      ipopt_problem->g_scaling = new Number[ipopt_problem->m];
-    }
-    for (::Index i=0; i<ipopt_problem->m; i++) {
+    for (Index i=0; i<ipopt_problem->m; i++) {
       ipopt_problem->g_scaling[i] = g_scaling[i];
     }
-  }
-  else {
-    delete [] ipopt_problem->g_scaling;
-    ipopt_problem->g_scaling = NULL;
   }
 
   return (Bool)true;
@@ -195,8 +206,7 @@ Bool SetIntermediateCallback(IpoptProblem ipopt_problem,
   return (Bool)true;
 }
 
-
-enum ApplicationReturnStatus IpoptSolve(
+enum ::ApplicationReturnStatus IpoptSolve(
   IpoptProblem ipopt_problem,
   Number* x,
   Number* g,
@@ -206,84 +216,85 @@ enum ApplicationReturnStatus IpoptSolve(
   Number* mult_x_U,
   UserDataPtr user_data)
 {
-  using namespace Ipopt;
-
-  // Initialize and process options
-  Ipopt::ApplicationReturnStatus retval = ipopt_problem->app->Initialize();
-  if (retval!=Ipopt::Solve_Succeeded) {
-    return (::ApplicationReturnStatus) retval;
-  }
-
-  if (!x) {
-    ipopt_problem->app->Jnlst()->Printf(J_ERROR, J_MAIN,
-                                        "Error: Array x with starting point information is NULL.");
-    return (::ApplicationReturnStatus) Ipopt::Invalid_Problem_Definition;
-  }
-
-  // Copy the starting point information
-  ::Number* start_x = new ::Number[ipopt_problem->n];
-  for (::Index i=0; i<ipopt_problem->n; i++) {
-    start_x[i] = x[i];
-  }
-  ::Number* start_lam = NULL;
-  if (mult_g) {
-    start_lam = new ::Number[ipopt_problem->m];
-    for (::Index i=0; i<ipopt_problem->m; i++) {
-      start_lam[i] = mult_g[i];
-    }
-  }
-  ::Number* start_z_L = NULL;
-  if (mult_x_L) {
-    start_z_L = new ::Number[ipopt_problem->n];
-    for (::Index i=0; i<ipopt_problem->n; i++) {
-      start_z_L[i] = mult_x_L[i];
-    }
-  }
-  ::Number* start_z_U = NULL;
-  if (mult_x_U) {
-    start_z_U = new ::Number[ipopt_problem->n];
-    for (::Index i=0; i<ipopt_problem->n; i++) {
-      start_z_U[i] = mult_x_U[i];
-    }
-  }
-
-  // Create the original nlp
-  SmartPtr<TNLP> tnlp;
-
   Ipopt::ApplicationReturnStatus status;
-  try {
-    tnlp = new StdInterfaceTNLP(ipopt_problem->n, ipopt_problem->x_L,
-                                ipopt_problem->x_U, ipopt_problem->m,
-                                ipopt_problem->g_L, ipopt_problem->g_U,
-                                ipopt_problem->nele_jac,
-                                ipopt_problem->nele_hess,
-                                ipopt_problem->index_style,
-                                start_x, start_lam, start_z_L, start_z_U,
-                                ipopt_problem->eval_f, ipopt_problem->eval_g,
-                                ipopt_problem->eval_grad_f,
-                                ipopt_problem->eval_jac_g,
-                                ipopt_problem->eval_h,
-                                ipopt_problem->intermediate_cb,
-                                x, mult_x_L, mult_x_U, g, mult_g,
-                                obj_val, user_data,
-                                ipopt_problem->obj_scaling,
-                                ipopt_problem->x_scaling,
-                                ipopt_problem->g_scaling);
-    status = ipopt_problem->app->OptimizeTNLP(tnlp);
+
+  // Create the original nlp, if not already done.
+  if (GetRawPtr(ipopt_problem->tnlp) == NULL) {
+    // Initialize and process options
+    Ipopt::ApplicationReturnStatus retval = ipopt_problem->app->Initialize();
+    if (retval!=Ipopt::Solve_Succeeded) {
+      return (::ApplicationReturnStatus) retval;
+    }
+
+    if (!x) {
+      ipopt_problem->app->Jnlst()->Printf(J_ERROR, J_MAIN,
+                                          "Error: Array x with starting point information is NULL.");
+      return (::ApplicationReturnStatus) ::Invalid_Problem_Definition;
+    }
+
+    // Copy the starting point information
+    ipopt_problem->start_x.resize(ipopt_problem->n);
+    for (Index i=0; i<ipopt_problem->n; i++) {
+      ipopt_problem->start_x[i] = x[i];
+    }
+    if (mult_g) {
+      ipopt_problem->start_lam.resize(ipopt_problem->m);
+      for (Index i=0; i<ipopt_problem->m; i++) {
+        ipopt_problem->start_lam[i] = mult_g[i];
+      }
+    }
+    if (mult_x_L) {
+      ipopt_problem->start_z_L.resize(ipopt_problem->n);
+      for (Index i=0; i<ipopt_problem->n; i++) {
+        ipopt_problem->start_z_L[i] = mult_x_L[i];
+      }
+    }
+    if (mult_x_U) {
+      ipopt_problem->start_z_U.resize(ipopt_problem->n);
+      for (Index i=0; i<ipopt_problem->n; i++) {
+        ipopt_problem->start_z_U[i] = mult_x_U[i];
+      }
+    }
+
+    try {
+      ipopt_problem->tnlp = new StdInterfaceTNLP(ipopt_problem->n,
+                                                 &ipopt_problem->x_L[0],
+                                                 &ipopt_problem->x_U[0],
+                                                 ipopt_problem->m,
+                                                 (ipopt_problem->m > 0) ? &ipopt_problem->g_L[0] : NULL,
+                                                 (ipopt_problem->m > 0) ? &ipopt_problem->g_U[0] : NULL,
+                                                 ipopt_problem->nele_jac,
+                                                 ipopt_problem->nele_hess,
+                                                 ipopt_problem->index_style,
+                                                 &ipopt_problem->start_x[0],
+                                                 &ipopt_problem->start_lam[0],
+                                                 &ipopt_problem->start_z_L[0],
+                                                 &ipopt_problem->start_z_U[0],
+                                                 ipopt_problem->eval_f,
+                                                 ipopt_problem->eval_g,
+                                                 ipopt_problem->eval_grad_f,
+                                                 ipopt_problem->eval_jac_g,
+                                                 ipopt_problem->eval_h,
+                                                 ipopt_problem->intermediate_cb,
+                                                 x, mult_x_L, mult_x_U, g, mult_g,
+                                                 obj_val, user_data,
+                                                 ipopt_problem->obj_scaling,
+                                                 &ipopt_problem->x_scaling[0],
+                                                 (ipopt_problem->m > 0) ? &ipopt_problem->g_scaling[0] : NULL);
+    }
+    catch (INVALID_STDINTERFACE_NLP& exc) {
+      exc.ReportException(*ipopt_problem->app->Jnlst(), J_ERROR);
+      status = Ipopt::Invalid_Problem_Definition;
+    }
   }
-  catch (INVALID_STDINTERFACE_NLP& exc) {
-    exc.ReportException(*ipopt_problem->app->Jnlst(), J_ERROR);
-    status = Ipopt::Invalid_Problem_Definition;
+
+  try {
+    status = ipopt_problem->app->OptimizeTNLP(ipopt_problem->tnlp);
   }
   catch( IpoptException& exc ) {
     exc.ReportException(*ipopt_problem->app->Jnlst(), J_ERROR);
     status = Ipopt::Unrecoverable_Exception;
   }
-
-  delete [] start_x;
-  delete [] start_lam;
-  delete [] start_z_L;
-  delete [] start_z_U;
 
   return (::ApplicationReturnStatus) status;
 }
