@@ -219,7 +219,7 @@ enum ::ApplicationReturnStatus IpoptSolve(
   Ipopt::ApplicationReturnStatus status;
 
   // Create the original nlp, if not already done.
-  if (GetRawPtr(ipopt_problem->tnlp) == NULL) {
+  if (IsNull(ipopt_problem->tnlp)) {
     // Initialize and process options
     Ipopt::ApplicationReturnStatus retval = ipopt_problem->app->Initialize();
     if (retval!=Ipopt::Solve_Succeeded) {

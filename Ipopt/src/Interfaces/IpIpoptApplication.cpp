@@ -574,15 +574,29 @@ namespace Ipopt
   ApplicationReturnStatus
   IpoptApplication::Initialize()
   {
-     std::string option_file_name;
-     options_->GetStringValue("option_file_name", option_file_name, "");
-     if (option_file_name != "" && option_file_name != "ipopt.opt")
-        jnlst_->Printf(J_SUMMARY, J_MAIN, "Using option file \"%s\".\n\n", option_file_name.c_str());
+    std::string option_file_name;
+    options_->GetStringValue("option_file_name", option_file_name, "");
+    if (option_file_name != "" && option_file_name != "ipopt.opt")
+      jnlst_->Printf(J_SUMMARY, J_MAIN, "Using option file \"%s\".\n\n", option_file_name.c_str());
 
-     if (read_params_dat_)
-	return Initialize(option_file_name);
+    ApplicationReturnStatus result = Solve_Succeeded;
+    if (read_params_dat_)
+      result = Initialize(option_file_name);
 
-     return Solve_Succeeded;
+    if (IsNull(alg_builder)) {
+#ifdef BUILD_INEXACT
+      if (inexact_algorithm_) {
+        alg_builder = new InexactAlgorithmBuilder();
+      }
+      else {
+#endif
+        alg_builder = new AlgorithmBuilder();
+#ifdef BUILD_INEXACT
+      }
+#endif
+    }
+
+    return result;
   }
 
   IpoptApplication::~IpoptApplication()
@@ -715,7 +729,8 @@ namespace Ipopt
   ApplicationReturnStatus
   IpoptApplication::OptimizeTNLP(const SmartPtr<TNLP>& tnlp)
   {
-    nlp_adapter_ = new TNLPAdapter(GetRawPtr(tnlp), ConstPtr(jnlst_));
+    if (IsNull(nlp_adapter_)) 
+      nlp_adapter_ = new TNLPAdapter(GetRawPtr(tnlp), ConstPtr(jnlst_));
     return OptimizeNLP(nlp_adapter_);
   }
 
@@ -736,42 +751,22 @@ namespace Ipopt
   ApplicationReturnStatus
   IpoptApplication::OptimizeNLP(const SmartPtr<NLP>& nlp)
   {
-    SmartPtr<AlgorithmBuilder> alg_builder = NULL;
-    return OptimizeNLP(nlp, alg_builder);
-  }
-
-  ApplicationReturnStatus
-  IpoptApplication::OptimizeNLP(const SmartPtr<NLP>& nlp, SmartPtr<AlgorithmBuilder>& alg_builder)
-  {
     ApplicationReturnStatus retValue = Internal_Error;
 
     // Prepare internal data structures of the algorithm
     try {
-
-      if (IsNull(alg_builder)) {
-#ifdef BUILD_INEXACT
-        if (inexact_algorithm_) {
-          alg_builder = new InexactAlgorithmBuilder();
+      if (IsNull(use_nlp)) {
+        if (replace_bounds_) {
+          use_nlp = new NLPBoundsRemover(*nlp);
         }
         else {
-#endif
-          alg_builder = new AlgorithmBuilder();
-#ifdef BUILD_INEXACT
+          use_nlp = nlp;
         }
-#endif
-      }
+        alg_builder->BuildIpoptObjects(*jnlst_, *options_, "", use_nlp,
+                                       ip_nlp_, ip_data_, ip_cq_);
 
-      SmartPtr<NLP> use_nlp;
-      if (replace_bounds_) {
-        use_nlp = new NLPBoundsRemover(*nlp);
+        alg_ = GetRawPtr(alg_builder->BuildBasicAlgorithm(*jnlst_, *options_, ""));
       }
-      else {
-        use_nlp = nlp;
-      }
-      alg_builder->BuildIpoptObjects(*jnlst_, *options_, "", use_nlp,
-                                     ip_nlp_, ip_data_, ip_cq_);
-
-      alg_ = GetRawPtr(alg_builder->BuildBasicAlgorithm(*jnlst_, *options_, ""));
 
       // finally call the optimization
       retValue = call_optimize();

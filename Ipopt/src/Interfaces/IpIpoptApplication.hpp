@@ -98,9 +98,6 @@ namespace Ipopt
     /** Solve a problem that inherits from NLP */
     virtual ApplicationReturnStatus OptimizeNLP(const SmartPtr<NLP>& nlp);
 
-    /** Solve a problem that inherits from NLP */
-    virtual ApplicationReturnStatus OptimizeNLP(const SmartPtr<NLP>& nlp, SmartPtr<AlgorithmBuilder>& alg_builder);
-
     /** Solve a problem (that inherits from TNLP) for a repeated time.
      *  The OptimizeTNLP method must have been called before.  The
      *  TNLP must be the same object, and the structure (number of
@@ -266,6 +263,10 @@ namespace Ipopt
      *  constraints.  This is necessary for the inexact algorithm. */
     bool replace_bounds_;
     //@}
+
+    SmartPtr<AlgorithmBuilder> alg_builder;
+    
+    SmartPtr<NLP> use_nlp;
   };
 
 } // namespace Ipopt
